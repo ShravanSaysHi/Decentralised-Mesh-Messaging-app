@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong
  * - Maintains routing table in Room; exposes as StateFlow.
  * - Updates table when neighbors are seen (Bluetooth address = node id for Phase 2).
  */
-class RoutingRepository(context: Context) {
+class RoutingRepository(context: Context) : RouteResolver {
 
     private val appContext = context.applicationContext
     private val nodeIdentity = NodeIdentity(appContext)
@@ -97,7 +97,7 @@ class RoutingRepository(context: Context) {
         }
     }
 
-    fun applyUpdatesFromNeighborAsync(from: String, entries: List<RoutingEntry>) {
+    override fun applyUpdatesFromNeighborAsync(from: String, entries: List<RoutingEntry>) {
         scope.launch { applyUpdatesFromNeighbor(from, entries) }
     }
 
@@ -122,7 +122,7 @@ class RoutingRepository(context: Context) {
         scope.launch { pruneStaleEntries() }
     }
 
-    suspend fun getNextHop(destinationId: String): String? = dao.getNextHop(destinationId)
+    override suspend fun getNextHop(destinationId: String): String? = dao.getNextHop(destinationId)
 
     /** Refresh lastSeen for a node. */
     fun heartbeat(nodeId: String) {

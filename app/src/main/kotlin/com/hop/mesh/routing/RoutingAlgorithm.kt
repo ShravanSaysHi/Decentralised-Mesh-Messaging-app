@@ -34,19 +34,7 @@ object RoutingAlgorithm {
         val hopsVia = advertisedHops + 1
         if (costVia >= INFINITE_COST || hopsVia > MAX_HOPS) return null
 
-        // 1. New sequence number logic (DVR standard: newer sequence is always trusted)
-        if (current != null && advertisedSeq > current.sequenceNumber) {
-            return current.copy(
-                deviceName = deviceName,
-                nextHop = fromNeighbor,
-                cost = costVia,
-                lastSeen = now,
-                hopCount = hopsVia,
-                sequenceNumber = advertisedSeq
-            )
-        }
-
-        // 2. No existing route
+        // 1. No existing route: always accept.
         if (current == null) {
             return RoutingEntry(
                 nodeId = nodeId,
@@ -59,13 +47,18 @@ object RoutingAlgorithm {
             )
         }
 
-        // 3. Same sequence, better cost or better hop count
-        if (advertisedSeq == current.sequenceNumber) {
-            val betterCost = costVia < current.cost
-            val sameCostBetterHops = (costVia == current.cost && hopsVia < current.hopCount)
-            
-            if (betterCost || sameCostBetterHops) {
-                return current.copy(
+        // Does the advertised path actually improve on (or match) what we already have?
+        val betterCost = costVia < current.cost
+        val sameCostBetterHops = (costVia == current.cost && hopsVia < current.hopCount)
+        val advertisedIsBetter = betterCost || sameCostBetterHops
+
+        // 2. Newer sequence number (DVR loop prevention). Trust the newer info by
+        //    refreshing lastSeen/seq, but only replace the path if it is actually
+        //    as good or better — a distant node bumping its sequence must not be
+        //    able to hijack an existing shorter route.
+        if (advertisedSeq > current.sequenceNumber) {
+            return if (advertisedIsBetter) {
+                current.copy(
                     deviceName = deviceName,
                     nextHop = fromNeighbor,
                     cost = costVia,
@@ -73,9 +66,28 @@ object RoutingAlgorithm {
                     hopCount = hopsVia,
                     sequenceNumber = advertisedSeq
                 )
+            } else {
+                // Keep the better path; just record that this route is still fresh.
+                current.copy(
+                    lastSeen = now,
+                    sequenceNumber = advertisedSeq
+                )
             }
         }
 
+        // 3. Same sequence, strictly better cost or hop count.
+        if (advertisedSeq == current.sequenceNumber && advertisedIsBetter) {
+            return current.copy(
+                deviceName = deviceName,
+                nextHop = fromNeighbor,
+                cost = costVia,
+                lastSeen = now,
+                hopCount = hopsVia,
+                sequenceNumber = advertisedSeq
+            )
+        }
+
+        // 4. Older or non-improving update: ignore.
         return null
     }
 

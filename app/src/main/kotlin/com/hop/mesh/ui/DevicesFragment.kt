@@ -98,7 +98,7 @@ class DevicesFragment : Fragment() {
                     state.isServerRunning -> requireContext().getColor(com.hop.mesh.R.color.status_reachable)
                     else -> requireContext().getColor(com.hop.mesh.R.color.status_offline)
                 }
-                binding.statusDot.setBackgroundColor(dotColor)
+                binding.statusDot.backgroundTintList = android.content.res.ColorStateList.valueOf(dotColor)
             }
         }
     }

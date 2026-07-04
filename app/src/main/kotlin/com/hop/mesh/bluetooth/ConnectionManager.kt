@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Manages up to [MAX_PEERS] simultaneous RFCOMM connections.
  * Server accept loop runs continuously to accept inbound peers.
  */
-class ConnectionManager(context: Context) {
+class ConnectionManager(context: Context) : MessageTransport {
 
     companion object {
         private const val TAG = "ConnectionManager"
@@ -166,7 +166,7 @@ class ConnectionManager(context: Context) {
     // ── Send ─────────────────────────────────────────────────────────────────
 
     /** Send raw bytes to a specific peer. Returns false if peer not found or send failed. */
-    fun sendToPeer(address: String, data: ByteArray): Boolean {
+    override fun sendToPeer(address: String, data: ByteArray): Boolean {
         val peer = peers[address] ?: return false
         val ok = try {
             peer.send(data)
@@ -179,7 +179,7 @@ class ConnectionManager(context: Context) {
     }
 
     /** Broadcast raw bytes to ALL connected peers. Returns number of successful sends. */
-    fun broadcastToAll(data: ByteArray): Int {
+    override fun broadcastToAll(data: ByteArray): Int {
         var count = 0
         for ((address, peer) in peers) {
             if (peer.send(data)) count++
@@ -189,7 +189,7 @@ class ConnectionManager(context: Context) {
     }
 
     /** Broadcast raw bytes to all peers EXCEPT the specified one (for forwarding). */
-    fun broadcastExcept(excludeAddress: String, data: ByteArray): Int {
+    override fun broadcastExcept(excludeAddress: String, data: ByteArray): Int {
         var count = 0
         for ((address, peer) in peers) {
             if (address == excludeAddress) continue
@@ -201,9 +201,9 @@ class ConnectionManager(context: Context) {
 
     // ── Queries ──────────────────────────────────────────────────────────────
 
-    fun isConnectedTo(address: String): Boolean = peers.containsKey(address)
+    override fun isConnectedTo(address: String): Boolean = peers.containsKey(address)
     fun connectedAddresses(): Set<String> = peers.keys.toSet()
-    fun peerCount(): Int = peers.size
+    override fun peerCount(): Int = peers.size
 
     // ── Lifecycle ────────────────────────────────────────────────────────────
 

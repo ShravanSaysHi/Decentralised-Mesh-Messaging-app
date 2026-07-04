@@ -27,8 +27,8 @@ class RoutingEntryTest {
 
     @Test
     fun routingEntry_equality() {
-        val a = RoutingEntry("N1", "H1", 1, 100L, 1)
-        val b = RoutingEntry("N1", "H1", 1, 100L, 1)
+        val a = RoutingEntry(nodeId = "N1", nextHop = "H1", cost = 1, lastSeen = 100L, hopCount = 1)
+        val b = RoutingEntry(nodeId = "N1", nextHop = "H1", cost = 1, lastSeen = 100L, hopCount = 1)
         assertEquals(a, b)
         assertEquals(a.hashCode(), b.hashCode())
     }

@@ -21,7 +21,14 @@ class RoutingAlgorithmTest {
         hopCount: Int = 2,
         seq: Long = 1L,
         lastSeen: Long = now
-    ) = RoutingEntry(nodeId, nextHop, cost, lastSeen, hopCount, seq)
+    ) = RoutingEntry(
+        nodeId = nodeId,
+        nextHop = nextHop,
+        cost = cost,
+        lastSeen = lastSeen,
+        hopCount = hopCount,
+        sequenceNumber = seq
+    )
 
     // ── Bug 2: MAX_HOPS boundary ──────────────────────────────────────────────
 
@@ -32,6 +39,7 @@ class RoutingAlgorithmTest {
         val result = RoutingAlgorithm.mergeUpdate(
             current = null,
             nodeId = "N",
+            deviceName = "dev",
             fromNeighbor = "H",
             advertisedCost = 1,
             advertisedHops = hops,
@@ -48,6 +56,7 @@ class RoutingAlgorithmTest {
         val result = RoutingAlgorithm.mergeUpdate(
             current = null,
             nodeId = "N",
+            deviceName = "dev",
             fromNeighbor = "H",
             advertisedCost = 1,
             advertisedHops = RoutingAlgorithm.MAX_HOPS,
@@ -66,6 +75,7 @@ class RoutingAlgorithmTest {
         val result = RoutingAlgorithm.mergeUpdate(
             current = existing,
             nodeId = existing.nodeId,
+            deviceName = "dev",
             fromNeighbor = "far-hop",
             advertisedCost = 10,       // costVia = 11, much worse
             advertisedHops = 8,        // hopsVia = 9, worse
@@ -85,7 +95,7 @@ class RoutingAlgorithmTest {
 
     @Test
     fun mergeUpdate_newRouteCreated_whenNoCurrent() {
-        val result = RoutingAlgorithm.mergeUpdate(null, "N", "H", 1, 1, 1L, now)
+        val result = RoutingAlgorithm.mergeUpdate(null, "N", "dev", "H", 1, 1, 1L, now)
         assertNotNull(result)
         assertEquals("N", result!!.nodeId)
         assertEquals("H", result.nextHop)
@@ -96,7 +106,7 @@ class RoutingAlgorithmTest {
     @Test
     fun mergeUpdate_betterCostWins() {
         val existing = entry(nextHop = "old-hop", cost = 5, hopCount = 3)
-        val result = RoutingAlgorithm.mergeUpdate(existing, existing.nodeId, "new-hop", 1, 1, existing.sequenceNumber + 1, now)
+        val result = RoutingAlgorithm.mergeUpdate(existing, existing.nodeId, "dev", "new-hop", 1, 1, existing.sequenceNumber + 1, now)
         assertNotNull(result)
         assertEquals("new-hop", result!!.nextHop)
         assertEquals(2, result.cost)
@@ -105,7 +115,7 @@ class RoutingAlgorithmTest {
     @Test
     fun mergeUpdate_infiniteCostRejected() {
         val result = RoutingAlgorithm.mergeUpdate(
-            null, "N", "H",
+            null, "N", "dev", "H",
             advertisedCost = RoutingAlgorithm.INFINITE_COST,
             advertisedHops = 1,
             advertisedSeq = 1L,

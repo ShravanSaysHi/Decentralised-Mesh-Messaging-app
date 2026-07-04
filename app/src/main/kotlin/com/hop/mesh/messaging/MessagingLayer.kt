@@ -1,11 +1,11 @@
 package com.hop.mesh.messaging
 
-import com.hop.mesh.bluetooth.ConnectionManager
+import com.hop.mesh.bluetooth.MessageTransport
 import com.hop.mesh.encryption.MessageCrypto
 import com.hop.mesh.encryption.SessionKeyDao
 import com.hop.mesh.encryption.SessionKeyEntry
 import com.hop.mesh.encryption.X25519Manager
-import com.hop.mesh.routing.RoutingRepository
+import com.hop.mesh.routing.RouteResolver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -30,8 +30,8 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class MessagingLayer(
     private val localNodeId: String,
-    private val routingRepository: RoutingRepository,
-    private val connectionManager: ConnectionManager,
+    private val routingRepository: RouteResolver,
+    private val connectionManager: MessageTransport,
     private val crypto: MessageCrypto,
     private val sessionKeyDao: SessionKeyDao,
     private val scope: CoroutineScope

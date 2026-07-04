@@ -69,9 +69,17 @@ class InboxAdapter : ListAdapter<MessagingLayer.InboxMessage, InboxAdapter.ViewH
                 else -> ContextCompat.getColor(ctx, R.color.bubble_received_text)
             }
 
+            // Rounded bubble with a "tail" flattened toward the sender's side:
+            // received bubbles flatten bottom-start, my bubbles flatten bottom-end.
+            val r = 28f
+            val tail = 6f
             val bubble = GradientDrawable().apply {
                 setColor(bgColor)
-                cornerRadius = 24f
+                cornerRadii = if (isMine) {
+                    floatArrayOf(r, r, r, r, tail, tail, r, r) // TL TR BR BL
+                } else {
+                    floatArrayOf(r, r, r, r, r, r, tail, tail)
+                }
             }
             binding.bubbleContainer.background = bubble
             binding.inboxBody.setTextColor(textColor)
